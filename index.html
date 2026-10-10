@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Dolaşan bir sözün hadis olup olmadığını Kütüb-i Sitte, Muvatta ve uydurma hadis kitaplarında arayın: sahih, zayıf veya uydurma.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%231d6b5f%27/%3E%3Cpath d=%27M18 16h20a8 8 0 0 1 8 8v24H26a8 8 0 0 1-8-8z%27 fill=%27white%27/%3E%3C/svg%3E">
+<title>Hadis Sorgu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=Amiri:wght@400;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: tek sütunlu araç — üstte arama, altında kaynak süzgeci, sonra rivayet kartları */
+:root{
+  --bg:#f3f6f4; --surface:#ffffff; --ink:#18231f; --muted:#5b6b65; --line:#d7e0dc;
+  --accent:#1d6b5f; --accent-soft:#e2efeb;
+  --ok:#1f7a45; --ok-bg:#e3f3e8; --mid:#7a6a12; --mid-bg:#f6f0d4;
+  --weak:#a4561a; --weak-bg:#fbe9dc; --bad:#a3262e; --bad-bg:#fbe3e4;
+  --f-display:"Alegreya",Georgia,serif; --f-body:"Source Sans 3",system-ui,sans-serif; --f-ar:"Amiri","Traditional Arabic",serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111816; --surface:#18211e; --ink:#e4ece8; --muted:#97a8a1; --line:#2b3833;
+  --accent:#5fbfae; --accent-soft:#1d332e;
+  --ok:#6fcf93; --ok-bg:#183424; --mid:#dcc65a; --mid-bg:#332e14; --weak:#f0a066; --weak-bg:#3a2516; --bad:#f2878d; --bad-bg:#3d1a1d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111816; --surface:#18211e; --ink:#e4ece8; --muted:#97a8a1; --line:#2b3833;
+  --accent:#5fbfae; --accent-soft:#1d332e;
+  --ok:#6fcf93; --ok-bg:#183424; --mid:#dcc65a; --mid-bg:#332e14; --weak:#f0a066; --weak-bg:#3a2516; --bad:#f2878d; --bad-bg:#3d1a1d; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:28px 48px;display:flex;flex-direction:column;gap:20px}
+header h1{font-family:var(--f-display);font-size:2rem;line-height:1.15;margin:0;text-wrap:balance}
+header p{margin:.35rem 0 0;color:var(--muted);max-width:62ch}
+.eyebrow{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.search{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+textarea{width:100%;box-sizing:border-box;min-height:96px;resize:vertical;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+textarea:focus,button:focus-visible,.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 12px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:700;padding:9px 18px}
+button:disabled{opacity:.5;cursor:wait}
+.chip{font-size:.85rem;border-radius:999px;padding:4px 11px;background:var(--surface)}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.examples{font-size:.85rem;color:var(--muted)}
+.examples button{font-size:.85rem;border:none;background:none;color:var(--accent);padding:2px 4px;text-decoration:underline;text-underline-offset:3px}
+.status{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:4px;background:var(--line);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.notice{border-radius:10px;padding:12px 14px;border:1px solid var(--line);background:var(--surface)}
+.notice.warn{background:var(--weak-bg);border-color:transparent;color:var(--ink)}
+.notice strong{display:block;margin-bottom:2px}
+.results{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card-top{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:baseline}
+.src{font-family:var(--f-display);font-weight:700;font-size:1.08rem}
+.src small{font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:.85rem;margin-left:4px}
+.match{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.verdict{display:inline-flex;gap:6px;align-items:center;font-weight:700;font-size:.85rem;padding:3px 10px;border-radius:999px}
+.v-sahih{background:var(--ok-bg);color:var(--ok)}.v-hasen{background:var(--mid-bg);color:var(--mid)}
+.v-zayif{background:var(--weak-bg);color:var(--weak)}.v-cok,.v-mevzu{background:var(--bad-bg);color:var(--bad)}
+.v-ihtilaf{background:var(--accent-soft);color:var(--accent)}.v-soz{background:var(--weak-bg);color:var(--weak)}
+.card-mz{border-color:var(--bad);border-style:dashed}.v-yok{background:var(--line);color:var(--muted)}
+.tr{margin:0;max-width:68ch;overflow-wrap:anywhere}
+.ar{font-family:var(--f-ar);font-size:1.25rem;line-height:1.9;direction:rtl;text-align:right;margin:0;overflow-wrap:anywhere}
+details summary{cursor:pointer;color:var(--accent);font-size:.9rem;font-weight:600}
+.grades{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.9rem;border-top:1px solid var(--line);padding-top:8px}
+.grades .g-name{color:var(--muted)}.grades .g-val{text-align:right}
+.grades .g-raw{grid-column:1/-1;font-size:.75rem;color:var(--muted);margin-top:-4px}
+.flag{font-size:.8rem;color:var(--weak);font-weight:600}
+.card-foot{display:flex;flex-wrap:wrap;gap:12px;font-size:.85rem}
+.card-foot a{color:var(--accent)}
+.card-foot button{font-size:.85rem;padding:3px 10px}
+mark{background:var(--mid-bg);color:inherit;border-radius:3px;padding:0 1px}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;font-size:.85rem}
+.legend div{display:flex;flex-direction:column;gap:3px}
+footer{font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:6px}
+footer a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Kütüb-i Sitte · Muvatta · 36.390 rivayet · 3 mevzûat kitabı</div>
+    <h1>Bu söz hadis mi?</h1>
+    <p>Duyduğunuz veya sosyal medyada gördüğünüz sözü Türkçe ya da Arapça yapıştırın. Araç, sözü yedi temel hadis kaynağında arar; bulunan rivayetin kaynağını ve muhaddislerin verdiği hükümleri gösterir.</p>
+  </header>
+
+  <section class="search" aria-label="Arama">
+    <label for="q" class="eyebrow">Aranacak söz</label>
+    <textarea id="q" placeholder="Örn: Ameller niyetlere göredir…"></textarea>
+    <div class="row" id="books" aria-label="Kaynaklar"></div>
+    <div class="row" style="justify-content:space-between">
+      <button class="primary" id="go" disabled>Kaynaklarda ara</button>
+      <span class="status" id="status">Veri yükleniyor…</span>
+    </div>
+    <div class="bar" aria-hidden="true"><i id="prog"></i></div>
+    <div class="examples">Örnek: <span id="ex"></span></div>
+  </section>
+
+  <div id="out" class="results" aria-live="polite">
+    <div class="notice">
+      <strong>Hükümler nasıl okunur?</strong>
+      <div class="legend">
+        <div><span class="verdict v-sahih">Sahih</span>Senedi sağlam, güvenilir rivayet</div>
+        <div><span class="verdict v-hasen">Hasen</span>Sahihe yakın, delil olarak kabul edilir</div>
+        <div><span class="verdict v-zayif">Zayıf</span>Senedinde kusur var</div>
+        <div><span class="verdict v-cok">Çok zayıf</span>Münker, şâz veya ağır kusurlu</div>
+        <div><span class="verdict v-mevzu">Mevzû</span>Uydurma, Peygamberimize ait değil</div>
+        <div><span class="verdict v-ihtilaf">İhtilaflı</span>Âlimler farklı hüküm vermiş</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div><b>Önemli:</b> Bu araç fetva vermez ve kendisi hüküm üretmez. Gösterilen hükümler, veri setinde kayıtlı muhakkiklerin (Elbânî, Şuayb el-Arnaût, Zübeyr Ali Zaî, Ahmed Şâkir vb.) değerlendirmeleridir. Buhârî ve Müslim'deki rivayetler, ümmetin bu iki kitabı kabulü sebebiyle "sahih" olarak gösterilir.</div>
+    <div><b>Uydurma listesi:</b> Aliyyü'l-Kârî'nin (ö. 1014/1605) <i>el-Masnû' fî ma'rifeti'l-hadîsi'l-mevzû'</i> adlı eserinden alınmıştır. Eser, Sehâvî, Süyûtî, İbn Hacer, Irâkî, İbn Teymiyye gibi hadis hafızlarının "uydurma", "aslı yok" veya "hadis değil" dediği sözleri toplar. Arapça metin OpenITI dijital külliyatından; Türkçe çeviriler Claude tarafından yapılmıştır ve bir uzman tarafından gözden geçirilmelidir.</div>
+    <div><b>Süyûtî'nin eserleri:</b> <i>el-Leâli'l-masnû'a</i> (İbnü'l-Cevzî'nin <i>el-Mevzûât</i>'ının özeti ve Süyûtî'nin itirazları, 1.898 rivayet) ve <i>ez-Ziyâdât ale'l-Mevzûât</i> (1.051 madde). Arapça metinler OpenITI külliyatından alınmış, maddelere otomatik ayrılmıştır; hüküm etiketleri metindeki ifadelerden çıkarılır, bu yüzden her kartta hükmün Arapça aslı da gösterilir. Her iki eserin tamamı Türkçeye çevrildi; çeviriler yaklaşıktır, esas olan Arapça metindir.</div>
+    <div><b>el-Esrâru'l-merfû'a:</b> Aliyyü'l-Kârî'nin <i>el-Esrâru'l-merfû'a fi'l-ahbâri'l-mevzû'a</i> (el-Mevzûâtü'l-kübrâ) adlı eseri, 626 madde. Halk arasında hadis diye dolaşan sözleri Sehâvî, İbn Hacer, Süyûtî gibi hafızların hükümleriyle inceler. Kartlardaki etiket: uydurma, aslı yok, hadis değil (birinin sözü), zayıf, bu lafızla yok ama anlamı sahih hadiste var, aslı var. Arapça metin OpenITI külliyatından (M. es-Sabbâğ neşri); Türkçe çeviri ve etiketler yaklaşıktır.</div>
+    <div>Bir sözün bu yedi kaynakta bulunmaması onun uydurma olduğu anlamına gelmez; başka kaynaklarda (Müsned, Dârimî, Taberânî vb.) olabilir. Emin olmak için bir hadis âlimine danışın.</div>
+    <div>Veri: <a href="https://github.com/fawazahmed0/hadith-api" target="_blank" rel="noopener">fawazahmed0/hadith-api</a> açık veri seti (Arapça metin, Türkçe meal, hükümler). Nesâî'nin Türkçe meali veri setinde büyük ölçüde eksik; Nesâî araması Arapça metinle daha iyi çalışır.</div>
+  </footer>
+</div>
+
+<script>
+const BOOKS={bukhari:"Buhârî",muslim:"Müslim",abudawud:"Ebû Dâvûd",tirmidhi:"Tirmizî",nasai:"Nesâî",ibnmajah:"İbn Mâce",malik:"Muvatta",masnu:"el-Masnû'",laali:"el-Leâlî",ziyadat:"ez-Ziyâdât",esrar:"el-Esrâr"};
+const SY_NAME={laali:"Süyûtî, el-Leâli'l-masnû'a",ziyadat:"Süyûtî, ez-Ziyâdât ale'l-Mevzûât",esrar:"Aliyyü'l-Kârî, el-Esrâru'l-merfû'a"};
+const SY={
+  ziyadat:{k:["Dikkat · asıl hadis sahih, ilave uydurma","v-ihtilaf"],m:["Mevzû · Süyûtî","v-mevzu"],z:["Uydurma zeylinde · râvisi metruk/zayıf","v-cok"],n:["Süyûtî'nin uydurma zeylinde","v-mevzu"]},
+  laali:{k:["Dikkat · asıl hadis sahih, ilave uydurma","v-ihtilaf"],m:["Mevzû hükmü verilmiş","v-mevzu"],z:["Sahih değil · zayıf/metruk","v-cok"],d:["Süyûtî itiraz etmiş · başka tarikleri var","v-ihtilaf"],s:["Süyûtî'nin naklettiği başka tarik","v-yok"],n:["el-Leâlî'de incelenen rivayet","v-yok"]},
+  esrar:{m:["Mevzû (uydurma)","v-mevzu"],a:["Aslı yok · hadis olarak bulunamadı","v-cok"],s:["Hadis değil · birinin sözü / atasözü","v-soz"],z:["Zayıf · uydurma değil","v-zayif"],k:["Bu lafızla yok · aslı/anlamı sahih hadiste","v-ihtilaf"],d:["Aslı var · sahih/hasen kabul edilmiş","v-ihtilaf"],n:["el-Esrâr'da geçen söz","v-yok"]}
+};
+const MZ={m:["Mevzû (uydurma)","v-mevzu"],a:["Aslı yok · hadis değil","v-cok"],s:["Hadis değil · başkasının sözü","v-soz"],k:["Dikkat · kısmen sahih","v-ihtilaf"]};
+const SCHOLAR_TR={"Al-Albani":"Elbânî","Zubair Ali Zai":"Zübeyr Ali Zaî","Shuaib Al Arnaut":"Şuayb el-Arnaût","Abu Ghuddah":"Ebû Gudde","Muhammad Muhyi Al-Din Abdul Hamid":"M. Muhyiddin Abdülhamîd","Muhammad Fouad Abd al-Baqi":"M. Fuâd Abdülbâkî","Ahmad Muhammad Shakir":"Ahmed M. Şâkir","Bashar Awad Maarouf":"Beşşâr Avvâd Ma'rûf","Salim al-Hilali":"Selîm el-Hilâlî"};
+const EXAMPLES=["Ameller niyetlere göredir","Kolaylaştırın zorlaştırmayın","Vatan sevgisi imandandır","Kendini bilen Rabbini bilir","İlim Çin'de de olsa arayınız"];
+const CATS={sahih:["Sahih","v-sahih",1],hasen:["Hasen","v-hasen",2],zayif:["Zayıf","v-zayif",3],cok:["Çok zayıf","v-cok",4],mevzu:["Mevzû (uydurma)","v-mevzu",5]};
+
+let manifest,docs=[],index=new Map(),active=new Set(Object.keys(BOOKS)),ready=false;
+const $=id=>document.getElementById(id);
+
+// ---- normalize & tokenize
+const TRMAP={"ç":"c","ğ":"g","ı":"i","ö":"o","ş":"s","ü":"u","â":"a","î":"i","û":"u","é":"e"};
+function norm(s){
+  return s.toLocaleLowerCase("tr")
+    .replace(/[ً-ٰٟـ]/g,"")
+    .replace(/[أإآٱ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/ؤ/g,"و").replace(/ئ/g,"ي")
+    .replace(/[çğıöşüâîûé]/g,c=>TRMAP[c])
+    .replace(/[^a-z0-9ء-ي]+/g," ").trim();
+}
+const STOP=new Set("bir bu ve ile icin gibi daha ise ama veya her cok olan olarak ki de da ne mi mu sey kim onu ona ben sen biz siz onlar diye dedi derdi buyurdu rasulullah resulullah allah sallallahu aleyhi vesellem sellem nebi peygamber rivayet edildigine gore anlatti".split(" "));
+const AR_STOP=new Set("في من عن على ان الى الله صلى عليه وسلم قال حدثنا اخبرنا ثنا عن ابن ابي رسول النبي".split(" "));
+function stems(s){
+  const out=[];
+  for(let w of norm(s).split(" ")){
+    if(w.length<3)continue;
+    if(/[ء-ي]/.test(w)){
+      if(AR_STOP.has(w))continue;
+      w=w.replace(/^(وال|فال|بال|كال|لل|ال)/,"");
+      if(w.length<3)continue;
+      out.push(w);
+    }else{
+      if(STOP.has(w))continue;
+      // Türkçe ünsüz yumuşaması: Recep/Recebin, kitap/kitabı aynı köke insin
+      let s=w.slice(0,5);
+      s=s.slice(0,3)+s.slice(3).replace(/[bdg]/g,m=>({b:"p",d:"t",g:"k"})[m]);
+      out.push(s);
+    }
+  }
+  return out;
+}
+
+// ---- grades
+function classify(g){
+  const s=g.toLowerCase();
+  if(/mawdu|batil|fabricat/.test(s))return"mevzu";
+  if(/munkar|shadh|very daif/.test(s))return"cok";
+  if(/daif|da'if|weak/.test(s))return"zayif";
+  if(/hasan/.test(s)&&!/sahih/.test(s))return"hasen";
+  if(/sahih|agreed upon|mutawatir/.test(s))return"sahih";
+  return null;
+}
+function flags(g){
+  const s=g.toLowerCase(),f=[];
+  if(/mauquf|muquf/.test(s))f.push("Mevkûf: sahabe sözü olarak");
+  if(/maqtu/.test(s))f.push("Maktû: tâbiî sözü olarak");
+  if(/mursal/.test(s))f.push("Mürsel");
+  if(/isnaad|sanad/.test(s))f.push("Hüküm isnad hakkında");
+  return f;
+}
+function gradeLabel(g){
+  const c=classify(g);let t=c?CATS[c][0]:g;
+  if(/hasan sahih/i.test(g))t="Hasen sahih";
+  if(/lighairihi/i.test(g))t+=" li-gayrihî";
+  return t;
+}
+function verdict(doc){
+  if(doc.b==="masnu")return{cls:MZ[doc.c][1],text:MZ[doc.c][0]};
+  if(SY[doc.b]){const s=SY[doc.b][doc.c]||SY[doc.b].n;return{cls:s[1],text:s[0]}}
+  if(doc.b==="bukhari"||doc.b==="muslim")return{cls:"v-sahih",text:"Sahih · Sahîhayn"};
+  const cats=doc.g.map(([,gi])=>classify(manifest.grades[gi])).filter(Boolean);
+  if(!cats.length)return{cls:"v-yok",text:"Hüküm kaydı yok"};
+  const uniq=[...new Set(cats)].sort((a,b)=>CATS[a][2]-CATS[b][2]);
+  if(uniq.length===1)return{cls:CATS[uniq[0]][1],text:CATS[uniq[0]][0]};
+  return{cls:"v-ihtilaf",text:"İhtilaflı: "+CATS[uniq[0]][0]+" – "+CATS[uniq[uniq.length-1]][0]};
+}
+
+// ---- load
+async function loadBook(b){
+  const r=await fetch("data/"+b.key+".b64.txt");
+  if(!r.ok)throw new Error(b.name+" yüklenemedi ("+r.status+")");
+  const bin=atob((await r.text()).trim());
+  const buf=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)buf[i]=bin.charCodeAt(i);
+  let text;
+  if(buf[0]===0x1f&&buf[1]===0x8b){
+    const ds=new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"));
+    text=await new Response(ds).text();
+  }else text=new TextDecoder().decode(buf);
+  return JSON.parse(text);
+}
+async function init(){
+  try{
+    manifest=await (await fetch("data/manifest.json")).json();
+    let done=0;const total=manifest.books.length;
+    for(const b of manifest.books){
+      $("status").textContent=BOOKS[b.key]+" yükleniyor… ("+(done+1)+"/"+total+")";
+      const rows=await loadBook(b);
+      for(const [n,ar,tr,g,bk] of rows){
+        const id=docs.length;
+        docs.push({b:b.key,n,ar,tr,g,bk});
+        const seen=new Set(stems(tr+" "+ar));
+        for(const s of seen){let l=index.get(s);if(!l)index.set(s,l=[]);l.push(id)}
+      }
+      done++;$("prog").style.width=(done/total*100)+"%";
+      await new Promise(r=>setTimeout(r,0));
+    }
+    $("status").textContent="Uydurma rivayet listesi yükleniyor…";
+    const mz=await (await fetch("data/mevzu.json")).json();
+    for(const [n,ar,tr,note,c] of mz){
+      const id=docs.length;
+      docs.push({b:"masnu",n,ar,tr,note,c,g:[]});
+      for(const s of new Set(stems(tr+" "+ar))){let l=index.get(s);if(!l)index.set(s,l=[]);l.push(id)}
+    }
+    let TRS={};
+    try{TRS=await (await fetch("data/tr_suyuti.json")).json()}catch(e){}
+    for(const key of ["laali","ziyadat","esrar"]){
+      $("status").textContent=BOOKS[key]+" yükleniyor…";
+      const rows=await loadBook({key,name:BOOKS[key]});
+      const trs=TRS[key]||[];
+      rows.forEach(([n,matn,hukum,tam,c,ch,src],i)=>{
+        const id=docs.length,t=trs[i]||["",""];
+        docs.push({b:key,n,ar:matn||tam,matn,hukum,tam,c:t[2]||c,ch,src,tr:t[0],trh:t[1],g:[]});
+        for(const s of new Set(stems((matn||tam)+" "+t[0]))){let l=index.get(s);if(!l)index.set(s,l=[]);l.push(id)}
+      });
+    }
+    ready=true;$("go").disabled=false;
+    $("status").textContent=docs.length.toLocaleString("tr")+" rivayet hazır";
+    if($("q").value.trim())search();
+  }catch(e){$("status").textContent="Veri yüklenemedi: "+e.message+". Sayfayı yenileyin."}
+}
+
+// ---- search
+function search(){
+  if(!ready)return;
+  const q=$("q").value.trim();
+  if(!q){$("out").innerHTML="";return}
+  const qs=[...new Set(stems(q))];
+  if(!qs.length){render([],q);return}
+  const N=docs.length,w={};let wsum=0;
+  for(const s of qs){const df=(index.get(s)||[]).length;w[s]=df?Math.log(1+N/df):Math.log(1+N);wsum+=w[s]}
+  const score=new Map();
+  for(const s of qs){for(const id of (index.get(s)||[])){if(!active.has(docs[id].b))continue;score.set(id,(score.get(id)||0)+w[s])}}
+  const nq=norm(q);
+  let list=[...score].map(([id,sc])=>[id,sc/wsum]).sort((a,b)=>b[1]-a[1]).slice(0,300);
+  const qset=new Set(qs);
+  list=list.map(([id,cov])=>{
+    const d=docs[id];
+    // en küçük pencere: eşleşen kelimeler metinde birbirine ne kadar yakın?
+    let best=0;
+    for(const part of [d.tr,d.ar]){
+      if(!part)continue;
+      const seq=stems(part),cnt=new Map();let have=0,lo=0,need=new Set(seq.filter(s=>qset.has(s))).size;
+      if(!need)continue;let win=Infinity;
+      for(let hi=0;hi<seq.length;hi++){
+        const s=seq[hi];if(qset.has(s)){cnt.set(s,(cnt.get(s)||0)+1);if(cnt.get(s)===1)have++}
+        while(have===need){win=Math.min(win,hi-lo+1);const t=seq[lo];if(qset.has(t)){cnt.set(t,cnt.get(t)-1);if(!cnt.get(t))have--}lo++}
+      }
+      const partCov=[...new Set(seq.filter(s=>qset.has(s)))].reduce((a,s)=>a+w[s],0)/wsum;
+      best=Math.max(best,partCov*(0.45+0.55*Math.min(1,need*1.5/win)));
+    }
+    const t=norm(d.tr+" "+d.ar);
+    return[id,Math.min(1,best+(nq.length>12&&t.includes(nq)?0.2:0))];
+  }).sort((a,b)=>b[1]-a[1]).filter(x=>x[1]>=0.4).slice(0,25);
+  render(list,q,qs);
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function highlight(text,qs){
+  if(!text)return"";
+  const set=new Set(qs);
+  return esc(text).replace(/[\p{L}\p{M}]+/gu,w=>{
+    const n=norm(w);const k=/[ء-ي]/.test(n)?n.replace(/^(وال|فال|بال|كال|لل|ال)/,""):(s=>s.slice(0,3)+s.slice(3).replace(/[bdg]/g,m=>({b:"p",d:"t",g:"k"})[m]))(n.slice(0,5));
+    return n.length>=3&&set.has(k)?"<mark>"+w+"</mark>":w;
+  });
+}
+// uzun metinlerde eşleşen kelimelerin en yoğun olduğu bölümü göster
+function snippet(text,qs){
+  const set=new Set(qs),hits=[];
+  for(const m of text.matchAll(/[\p{L}\p{M}]+/gu)){const n=norm(m[0]);const k5=n.slice(0,5);if(n.length>=3&&set.has(k5.slice(0,3)+k5.slice(3).replace(/[bdg]/g,x=>({b:"p",d:"t",g:"k"})[x])))hits.push(m.index)}
+  if(!hits.length)return text.slice(0,400)+"…";
+  let best=hits[0],bc=0;
+  for(const h of hits){const c=hits.filter(x=>x>=h&&x<h+350).length;if(c>bc){bc=c;best=h}}
+  const s=Math.max(0,best-120),e=Math.min(text.length,best+380);
+  return (s>0?"…":"")+text.slice(s,e)+(e<text.length?"…":"");
+}
+function render(list,q,qs=[]){
+  const out=$("out");
+  if(!list.length){
+    out.innerHTML=`<div class="notice warn"><strong>Bu söz seçili kaynaklarda bulunamadı.</strong>Yedi temel hadis kaynağında bu söze benzeyen bir rivayet yok. Bu tek başına sözün uydurma olduğunu göstermez; ancak kaynağı belirtilmeden paylaşılan bu tür sözlere temkinli yaklaşın ve bir hadis âlimine sorun. Farklı kelimelerle veya Arapça aslıyla da arayabilirsiniz.</div>`;
+    return;
+  }
+  const strong=list[0][1]>=0.7;
+  let h=strong?"":`<div class="notice warn"><strong>Güçlü bir eşleşme yok.</strong>Aşağıdakiler kısmen benzeyen rivayetler. Aradığınız sözün birebir karşılığı bu kaynaklarda olmayabilir.</div>`;
+  for(const [id,sc] of list){
+    const d=docs[id],v=verdict(d);
+    if(SY[d.b]){
+      h+=`<article class="card card-mz">
+      <div class="card-top"><span class="src">${SY_NAME[d.b]}<small>${d.b==="ziyadat"||d.b==="esrar"?"No. "+d.n:esc(d.ch)+(d.src?" · "+esc(d.src):"")}</small></span><span class="match">%${Math.round(sc*100)} eşleşme</span></div>
+      <div><span class="verdict ${v.cls}">${v.text}</span></div>
+      ${d.tr?`<p class="tr">${highlight(d.tr,qs)}</p>`:""}
+      ${d.trh?`<div class="grades"><span class="g-name">Hüküm</span><span class="g-val"></span><span class="g-raw" style="font-size:.9rem;color:var(--ink);margin-top:0">${esc(d.trh)}</span></div>`:""}
+      ${d.matn?(d.tr?`<details><summary>Arapça metin</summary><p class="ar" lang="ar">${highlight(d.matn,qs)}</p></details>`:`<p class="ar" lang="ar">${highlight(d.matn,qs)}</p>`):""}
+      ${d.hukum?`<details${d.trh?"":" open"}><summary>Hükmün Arapça aslı</summary><p class="ar" lang="ar" style="font-size:1.05rem">${esc(d.hukum)}</p></details>`:""}
+      <details><summary>${d.b==="esrar"?"Tam metin ve Kârî'nin açıklaması":"Senediyle tam metin"}</summary><p class="ar" lang="ar" style="font-size:1.05rem">${highlight(d.tam,qs)}</p></details>
+      <div class="card-foot"><span class="match">${d.tr?"Türkçe çeviri yaklaşıktır; esas olan Arapça metindir.":"Türkçe çevirisi henüz eklenmedi."}</span><button data-cite="${esc(SY_NAME[d.b]+(d.b==="ziyadat"||d.b==="esrar"?", No. "+d.n:", "+d.ch)+" — "+v.text)}">Kaynağı kopyala</button></div>
+    </article>`;
+      continue;
+    }
+    if(d.b==="masnu"){
+      h+=`<article class="card card-mz">
+      <div class="card-top"><span class="src">Aliyyü'l-Kârî, el-Masnû'<small>No. ${d.n}</small></span><span class="match">%${Math.round(sc*100)} eşleşme</span></div>
+      <div><span class="verdict ${v.cls}">${v.text}</span></div>
+      <p class="tr">${highlight(d.tr,qs)}</p>
+      <div class="grades"><span class="g-name">Hüküm (kaynağıyla)</span><span class="g-val"></span><span class="g-raw" style="font-size:.9rem;color:var(--ink);margin-top:0">${esc(d.note)}</span></div>
+      <details><summary>Arapça asıl metin</summary><p class="ar" lang="ar">${highlight(d.ar,qs)}</p></details>
+      <div class="card-foot"><span class="match">Türkçe çeviri yaklaşıktır; esas olan Arapça metindir.</span><button data-cite="${esc("Aliyyü'l-Kârî, el-Masnû' fî ma'rifeti'l-hadîsi'l-mevzû', No. "+d.n+" — "+v.text)}">Kaynağı kopyala</button></div>
+    </article>`;
+      continue;
+    }
+    const gr=d.g.map(([si,gi])=>{const raw=manifest.grades[gi],name=manifest.scholars[si],fl=flags(raw);
+      return `<span class="g-name">${esc(SCHOLAR_TR[name]||name)}</span><span class="g-val">${esc(gradeLabel(raw))}</span>${fl.length?`<span class="g-raw"><span class="flag">${fl.join(" · ")}</span> — ${esc(raw)}</span>`:""}`}).join("");
+    const link=d.b!=="malik"?`<a href="https://sunnah.com/${d.b}:${d.n}" target="_blank" rel="noopener">sunnah.com'da aç</a>`:"";
+    h+=`<article class="card">
+      <div class="card-top"><span class="src">${BOOKS[d.b]}<small>No. ${d.n}</small></span><span class="match">%${Math.round(sc*100)} eşleşme</span></div>
+      <div><span class="verdict ${v.cls}">${v.text}</span></div>
+      ${d.tr?(d.tr.length>700?`<p class="tr">${highlight(snippet(d.tr,qs),qs)}</p><details><summary>Mealin tamamı</summary><p class="tr">${highlight(d.tr,qs)}</p></details>`:`<p class="tr">${highlight(d.tr,qs)}</p>`):`<p class="tr" style="color:var(--muted)">Türkçe meal bu rivayet için veri setinde yok.</p>`}
+      <details${d.tr?"":" open"}><summary>Arapça metin (senediyle)</summary><p class="ar" lang="ar">${highlight(d.ar,qs)}</p></details>
+      ${gr?`<div class="grades">${gr}</div>`:""}
+      <div class="card-foot">${link}<button data-cite="${esc(BOOKS[d.b]+", No. "+d.n+" — "+v.text)}">Kaynağı kopyala</button></div>
+    </article>`;
+  }
+  out.innerHTML=h;
+}
+
+// ---- UI
+for(const [k,n] of Object.entries(BOOKS)){
+  const b=document.createElement("button");b.className="chip";b.textContent=n;b.setAttribute("aria-pressed","true");b.id="book-"+k;
+  b.onclick=()=>{if(active.has(k)){if(active.size>1)active.delete(k)}else active.add(k);
+    document.querySelectorAll("#books .chip").forEach(c=>c.setAttribute("aria-pressed",active.has(c.id.slice(5))));search()};
+  $("books").appendChild(b);
+}
+for(const e of EXAMPLES){const b=document.createElement("button");b.textContent=e;b.onclick=()=>{$("q").value=e;search()};$("ex").appendChild(b)}
+$("go").onclick=search;
+$("q").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();search()}});
+$("out").addEventListener("click",e=>{const c=e.target.closest("[data-cite]");if(!c)return;
+  navigator.clipboard.writeText(c.dataset.cite).then(()=>{c.textContent="Kopyalandı"},()=>{c.textContent=c.dataset.cite})});
+init();
+</script>
+
+</html>
