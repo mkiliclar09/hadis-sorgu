@@ -201,9 +201,19 @@ function verdict(doc){
 }
 
 // ---- load
+// veri dosyasını önce data/ klasöründe, bulamazsa ana dizinde ara
+let DATA_BASE=null;
+async function getData(name){
+  const bases=DATA_BASE!==null?[DATA_BASE]:["data/",""];
+  for(const base of bases){
+    try{const r=await fetch(base+name);
+      if(r.ok&&!(r.headers.get("content-type")||"").includes("text/html")){DATA_BASE=base;return r}
+    }catch(e){}
+  }
+  throw new Error("\""+name+"\" dosyası bulunamadı (data klasörü eksik veya yanlış yerde olabilir)");
+}
 async function loadBook(b){
-  const r=await fetch("data/"+b.key+".b64.txt");
-  if(!r.ok)throw new Error(b.name+" yüklenemedi ("+r.status+")");
+  const r=await getData(b.key+".b64.txt");
   const bin=atob((await r.text()).trim());
   const buf=new Uint8Array(bin.length);
   for(let i=0;i<bin.length;i++)buf[i]=bin.charCodeAt(i);
@@ -216,7 +226,7 @@ async function loadBook(b){
 }
 async function init(){
   try{
-    manifest=await (await fetch("data/manifest.json")).json();
+    manifest=await (await getData("manifest.json")).json();
     let done=0;const total=manifest.books.length;
     for(const b of manifest.books){
       $("status").textContent=BOOKS[b.key]+" yükleniyor… ("+(done+1)+"/"+total+")";
@@ -231,14 +241,14 @@ async function init(){
       await new Promise(r=>setTimeout(r,0));
     }
     $("status").textContent="Uydurma rivayet listesi yükleniyor…";
-    const mz=await (await fetch("data/mevzu.json")).json();
+    const mz=await (await getData("mevzu.json")).json();
     for(const [n,ar,tr,note,c] of mz){
       const id=docs.length;
       docs.push({b:"masnu",n,ar,tr,note,c,g:[]});
       for(const s of new Set(stems(tr+" "+ar))){let l=index.get(s);if(!l)index.set(s,l=[]);l.push(id)}
     }
     let TRS={};
-    try{TRS=await (await fetch("data/tr_suyuti.json")).json()}catch(e){}
+    try{TRS=await (await getData("tr_suyuti.json")).json()}catch(e){}
     for(const key of ["laali","ziyadat","esrar"]){
       $("status").textContent=BOOKS[key]+" yükleniyor…";
       const rows=await loadBook({key,name:BOOKS[key]});
